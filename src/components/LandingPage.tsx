@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Menu, X, ShoppingCart, Package, Clock, Shield, Phone, MapPin, Mail, Facebook, Twitter, Instagram, Linkedin, ArrowRight, User, Info, Download, MailOpen, Send, Apple, Play } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const colors = {
   primary: '#FF7F30',
@@ -12,8 +13,128 @@ const colors = {
 
 const sectionMaxWidth = 1200;
 
+const formatPrice = (price: any, currency?: string) => {
+  if (price == null) {
+    return 'Sur demande';
+  }
+
+  const numericPrice = Number(price);
+  const base =
+    Number.isFinite(numericPrice)
+      ? numericPrice.toLocaleString('fr-FR', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })
+      : String(price);
+
+  return `${base} ${currency || 'XOF'}`;
+};
+
+const renderFeatures = (features: any) => {
+  if (!features) {
+    return null;
+  }
+
+  if (Array.isArray(features) && features.length > 0) {
+    return (
+      <ul
+        style={{
+          marginTop: '0.75rem',
+          paddingLeft: '1.2rem',
+          color: colors.lightGray,
+          fontSize: '0.9rem',
+        }}
+      >
+        {features.map((item, index) => (
+          <li key={index}>{String(item)}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (typeof features === 'object') {
+    const entries = Object.entries(features).filter(([, value]) => Boolean(value));
+
+    if (!entries.length) {
+      return null;
+    }
+
+    return (
+      <ul
+        style={{
+          marginTop: '0.75rem',
+          paddingLeft: '1.2rem',
+          color: colors.lightGray,
+          fontSize: '0.9rem',
+        }}
+      >
+        {entries.map(([key], index) => (
+          <li key={index}>{key}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  return null;
+};
+
 const LandingPage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [pricing, setPricing] = React.useState<{ client: any[]; livreur: any[] }>({
+    client: [],
+    livreur: [],
+  });
+  const [pricingLoading, setPricingLoading] = React.useState<boolean>(true);
+  const [pricingError, setPricingError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchPlans = async () => {
+      if (!supabase) {
+        setPricingError(
+          "Configuration Supabase manquante pour l'affichage des tarifs.",
+        );
+        setPricingLoading(false);
+        return;
+      }
+
+      try {
+        setPricingLoading(true);
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('is_active', true)
+          .order('price', { ascending: true });
+
+        if (error) {
+          setPricingError(
+            error.message ||
+              'Impossible de charger les tarifs pour le moment.',
+          );
+          return;
+        }
+
+        const allPlans = data || [];
+        const clientPlans = allPlans.filter(
+          (plan: any) => plan.user_type === 'client',
+        );
+        const livreurPlans = allPlans.filter(
+          (plan: any) => plan.user_type === 'livreur',
+        );
+
+        setPricing({
+          client: clientPlans,
+          livreur: livreurPlans,
+        });
+        setPricingError(null);
+      } catch (err) {
+        setPricingError('Erreur inattendue lors du chargement des tarifs.');
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
 
   return (
     <div
@@ -572,6 +693,325 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section
+        id="pricing"
+        style={{
+          padding: '4rem 1.5rem',
+          backgroundColor: colors.gray,
+        }}
+      >
+        <div style={{ maxWidth: sectionMaxWidth, margin: '0 auto' }}>
+          <h2
+            style={{
+              textAlign: 'center',
+              fontSize: 'clamp(2rem, 4.5vw, 2.5rem)',
+              marginBottom: '0.75rem',
+            }}
+          >
+            Tarifs et <span style={{ color: colors.primary }}>abonnements</span>
+          </h2>
+          <p
+            style={{
+              textAlign: 'center',
+              color: colors.lightGray,
+              marginBottom: '2.5rem',
+              maxWidth: '720px',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            Choisissez le plan qui correspond à votre activité, que vous soyez
+            client ou livreur.
+          </p>
+
+          {pricingError && (
+            <p
+              style={{
+                textAlign: 'center',
+                color: '#ff6b6b',
+                marginBottom: '1.5rem',
+                fontSize: '0.9rem',
+              }}
+            >
+              {pricingError}
+            </p>
+          )}
+
+          {pricingLoading ? (
+            <p
+              style={{
+                textAlign: 'center',
+                color: colors.lightGray,
+              }}
+            >
+              Chargement des tarifs...
+            </p>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '2rem',
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: colors.black,
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.primary}33`,
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '1.5rem',
+                    marginBottom: '1rem',
+                    color: colors.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <User size={22} />
+                  Clients
+                </h3>
+
+                {pricing.client.length === 0 ? (
+                  <p style={{ color: colors.lightGray }}>
+                    Aucun plan client disponible pour le moment.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '1rem',
+                    }}
+                  >
+                    {pricing.client.map((plan: any) => (
+                      <div
+                        key={plan.id}
+                        style={{
+                          backgroundColor: colors.gray,
+                          padding: '1.5rem',
+                          borderRadius: '10px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'baseline',
+                            gap: '0.75rem',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontSize: '1.1rem',
+                              margin: 0,
+                            }}
+                          >
+                            {plan.name}
+                          </h4>
+                          <span
+                            style={{
+                              color: colors.primary,
+                              fontWeight: 700,
+                              fontSize: '1rem',
+                            }}
+                          >
+                            {formatPrice(plan.price, plan.currency)}
+                          </span>
+                        </div>
+                        {plan.description && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              marginBottom: '0.5rem',
+                              fontSize: '0.9rem',
+                            }}
+                          >
+                            {plan.description}
+                          </p>
+                        )}
+                        {plan.duration_days && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Durée :{' '}
+                            {plan.duration_days >= 30
+                              ? `${Math.round(
+                                  plan.duration_days / 30,
+                                )} mois`
+                              : `${plan.duration_days} jours`}
+                          </p>
+                        )}
+                        {plan.max_missions_per_month && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Jusqu'à {plan.max_missions_per_month} missions /
+                            mois
+                          </p>
+                        )}
+                        {plan.api_access && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                            }}
+                          >
+                            Accès API inclus
+                          </p>
+                        )}
+                        {renderFeatures(plan.features)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: colors.black,
+                  padding: '2rem',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.primary}33`,
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: '1.5rem',
+                    marginBottom: '1rem',
+                    color: colors.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Package size={22} />
+                  Livreurs
+                </h3>
+
+                {pricing.livreur.length === 0 ? (
+                  <p style={{ color: colors.lightGray }}>
+                    Aucun plan livreur disponible pour le moment.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '1rem',
+                    }}
+                  >
+                    {pricing.livreur.map((plan: any) => (
+                      <div
+                        key={plan.id}
+                        style={{
+                          backgroundColor: colors.gray,
+                          padding: '1.5rem',
+                          borderRadius: '10px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'baseline',
+                            gap: '0.75rem',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontSize: '1.1rem',
+                              margin: 0,
+                            }}
+                          >
+                            {plan.name}
+                          </h4>
+                          <span
+                            style={{
+                              color: colors.primary,
+                              fontWeight: 700,
+                              fontSize: '1rem',
+                            }}
+                          >
+                            {formatPrice(plan.price, plan.currency)}
+                          </span>
+                        </div>
+                        {plan.description && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              marginBottom: '0.5rem',
+                              fontSize: '0.9rem',
+                            }}
+                          >
+                            {plan.description}
+                          </p>
+                        )}
+                        {plan.duration_days && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Durée :{' '}
+                            {plan.duration_days >= 30
+                              ? `${Math.round(
+                                  plan.duration_days / 30,
+                                )} mois`
+                              : `${plan.duration_days} jours`}
+                          </p>
+                        )}
+                        {plan.max_missions_per_month && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                              marginBottom: '0.25rem',
+                            }}
+                          >
+                            Jusqu'à {plan.max_missions_per_month} missions /
+                            mois
+                          </p>
+                        )}
+                        {plan.api_access && (
+                          <p
+                            style={{
+                              color: colors.lightGray,
+                              fontSize: '0.85rem',
+                            }}
+                          >
+                            Accès API inclus
+                          </p>
+                        )}
+                        {renderFeatures(plan.features)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section
         style={{
@@ -743,7 +1183,7 @@ const LandingPage: React.FC = () => {
                   fontFamily: "'Poppins', sans-serif"
                 }}>
                   <MapPin size={18} color={colors.primary} style={{ flexShrink: 0, marginTop: '0.25rem' }} />
-                  <span>123 Rue de la Livraison<br />75000 Paris, France</span>
+                  <span>Maison des Jeunes<br />Adidogome Lomé-Togo</span>
                 </p>
                 <p style={{ 
                   margin: '0 0 1rem', 
@@ -754,7 +1194,7 @@ const LandingPage: React.FC = () => {
                 }}>
                   <Phone size={18} color={colors.primary} />
                   <a 
-                    href="tel:+33123456789" 
+                    href="tel:+22899999999" 
                     style={{ 
                       color: colors.lightGray, 
                       textDecoration: 'none',
@@ -763,7 +1203,7 @@ const LandingPage: React.FC = () => {
                     onMouseOver={(e) => (e.currentTarget.style.color = colors.primary)}
                     onMouseOut={(e) => (e.currentTarget.style.color = colors.lightGray)}
                   >
-                    +33 1 23 45 67 89
+                    +228 79 46 19 31
                   </a>
                 </p>
                 <p style={{ 

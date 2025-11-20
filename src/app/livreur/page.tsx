@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, User, Phone, MapPin } from "lucide-react";
+import { CheckCircle, User, Phone, MapPin, Mail, Lock } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 const colors = {
   primary: "#FF7F30",
@@ -12,8 +13,84 @@ const colors = {
 };
 
 export default function LivreurPage() {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const formData = new FormData(e.currentTarget);
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const password = String(formData.get("password") || "").trim();
+    const pseudo = String(formData.get("pseudo") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const city = String(formData.get("city") || "").trim();
+    const hasVehicle = formData.get("hasVehicle") === "on";
+    const acceptConditions = formData.get("acceptConditions") === "on";
+
+    if (!name || !email || !password || !phone) {
+      setError("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
+    if (!hasVehicle) {
+      setError("Vous devez confirmer que vous avez un engin pour livrer.");
+      return;
+    }
+
+    if (!acceptConditions) {
+      setError("Vous devez accepter les conditions pour continuer.");
+      return;
+    }
+
+    if (!supabase) {
+      setError(
+        "Configuration Supabase manquante. Vérifiez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            fullname: name,
+            phone,
+            role: "livreur",
+            pseudo: pseudo || null,
+            city: city || null,
+          },
+        },
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
+          setError("Un compte avec cet email existe déjà.");
+        } else {
+          setError(signUpError.message || "Erreur lors de la création du compte.");
+        }
+        return;
+      }
+
+      setSuccess("Compte livreur créé avec succès. Vérifiez votre email pour confirmer votre inscription.");
+      e.currentTarget.reset();
+    } catch (err) {
+      setError("Erreur inattendue. Veuillez réessayer plus tard.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -110,9 +187,99 @@ export default function LivreurPage() {
                 <User size={18} color={colors.primary} />
                 <input
                   id="livreur-name"
+                  name="name"
                   type="text"
                   required
                   placeholder="Votre nom et prénom"
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: colors.white,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <label htmlFor="livreur-email">Adresse email</label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  backgroundColor: colors.black,
+                  padding: "0.75rem 0.9rem",
+                  borderRadius: 8,
+                }}
+              >
+                <Mail size={18} color={colors.primary} />
+                <input
+                  id="livreur-email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="vous@exemple.com"
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: colors.white,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <label htmlFor="livreur-password">Mot de passe</label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  backgroundColor: colors.black,
+                  padding: "0.75rem 0.9rem",
+                  borderRadius: 8,
+                }}
+              >
+                <Lock size={18} color={colors.primary} />
+                <input
+                  id="livreur-password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="Choisissez un mot de passe (6 caractères minimum)"
+                  style={{
+                    flex: 1,
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    color: colors.white,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <label htmlFor="livreur-pseudo">Pseudo (optionnel)</label>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  backgroundColor: colors.black,
+                  padding: "0.75rem 0.9rem",
+                  borderRadius: 8,
+                }}
+              >
+                <User size={18} color={colors.primary} />
+                <input
+                  id="livreur-pseudo"
+                  name="pseudo"
+                  type="text"
+                  placeholder="Votre pseudo (facultatif)"
                   style={{
                     flex: 1,
                     border: "none",
@@ -139,6 +306,7 @@ export default function LivreurPage() {
                 <Phone size={18} color={colors.primary} />
                 <input
                   id="livreur-phone"
+                  name="phone"
                   type="tel"
                   required
                   placeholder="Ex : +33 6 12 34 56 78"
@@ -154,7 +322,7 @@ export default function LivreurPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-              <label htmlFor="livreur-city">Ville / Zone de livraison</label>
+              <label htmlFor="livreur-city">Ville / Zone de livraison (optionnel)</label>
               <div
                 style={{
                   display: "flex",
@@ -168,8 +336,8 @@ export default function LivreurPage() {
                 <MapPin size={18} color={colors.primary} />
                 <input
                   id="livreur-city"
+                  name="city"
                   type="text"
-                  required
                   placeholder="Votre ville / quartier"
                   style={{
                     flex: 1,
@@ -182,6 +350,136 @@ export default function LivreurPage() {
               </div>
             </div>
 
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.5rem",
+                fontSize: "0.85rem",
+                color: colors.lightGray,
+              }}
+            >
+              <input type="checkbox" name="hasVehicle" style={{ marginTop: 3 }} />
+              <span>
+                Je possède un engin de déplacement (moto, vélo, voiture, etc.)
+                pour effectuer les livraisons.
+              </span>
+            </label>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.5rem",
+                fontSize: "0.85rem",
+                color: colors.lightGray,
+              }}
+            >
+              <input
+                type="checkbox"
+                name="acceptConditions"
+                style={{ marginTop: 3 }}
+              />
+              <span>
+                J'accepte les
+                {" "}
+                <a
+                  href="/conditions-utilisation"
+                  style={{ color: colors.primary, textDecoration: "underline" }}
+                >
+                  conditions d'utilisation
+                </a>{" "}
+                et la
+                {" "}
+                <a
+                  href="/politique-confidentialite"
+                  style={{ color: colors.primary, textDecoration: "underline" }}
+                >
+                  politique de confidentialité
+                </a>{" "}
+                de Cliver.
+              </span>
+            </label>
+
+            {error && (
+              <p
+                style={{
+                  margin: "0.5rem 0 0",
+                  color: "#ff6b6b",
+                  fontSize: "0.85rem",
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+            {success && (
+              <p
+                style={{
+                  margin: "0.5rem 0 0",
+                  color: colors.primary,
+                  fontSize: "0.85rem",
+                }}
+              >
+                {success}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={async () => {
+                setError(null);
+                setSuccess(null);
+
+                if (!supabase) {
+                  setError(
+                    "Configuration Supabase manquante. Vérifiez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+                  );
+                  return;
+                }
+
+                try {
+                  setLoading(true);
+                  const { error: oAuthError } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                  });
+
+                  if (oAuthError) {
+                    setError(
+                      oAuthError.message || "Erreur lors de la connexion avec Google.",
+                    );
+                  }
+                } catch (err) {
+                  setError("Erreur inattendue lors de la connexion avec Google.");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              style={{
+                marginTop: "1rem",
+                padding: "0.85rem 1.5rem",
+                borderRadius: 8,
+                border: "1px solid #FFFFFF22",
+                backgroundColor: "transparent",
+                color: colors.white,
+                fontWeight: 500,
+                cursor: loading ? "default" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+              }}
+              disabled={loading}
+            >
+              <img
+                src="/images/google_logo.png"
+                alt="Google"
+                style={{ width: 18, height: 18 }}
+              />
+              <span>Continuer avec Google</span>
+            </button>
+
             <button
               type="submit"
               style={{
@@ -192,11 +490,29 @@ export default function LivreurPage() {
                 backgroundColor: colors.primary,
                 color: colors.black,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? "default" : "pointer",
+                opacity: loading ? 0.7 : 1,
+              }}
+              disabled={loading}
+            >
+              {loading ? "Création du compte..." : "S'inscrire comme livreur"}
+            </button>
+
+            <p
+              style={{
+                marginTop: "0.75rem",
+                fontSize: "0.9rem",
+                color: colors.lightGray,
               }}
             >
-              S'inscrire comme livreur
-            </button>
+              Déjà inscrit ?{" "}
+              <a
+                href="/login-livreur"
+                style={{ color: colors.primary, textDecoration: "underline" }}
+              >
+                Se connecter
+              </a>
+            </p>
           </form>
         </section>
       </div>
