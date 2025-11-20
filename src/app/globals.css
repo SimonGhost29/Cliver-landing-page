@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-sans: "Poppins", sans-serif;
+}
+
+/* Styles de base pour le texte */
+body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
+/* Styles pour les titres */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+/* Styles pour les liens */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Thème sombre */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* Responsive spécifique landing page Cliver */
+.lp-page {
+  overflow-x: hidden;
+}
+
+.lp-header-menu-button {
+  display: none;
+}
+
+.lp-header-mobile-menu {
+  display: none;
+}
+
+.lp-header-mobile-menu.open {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .lp-header {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .lp-header-nav-links {
+    display: none;
+  }
+
+  .lp-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .lp-header-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lp-hero-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lp-footer-newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lp-footer-newsletter-form button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Boutons icônes only sur mobile */
+  .lp-hero-btn-label,
+  .lp-section-btn-label {
+    display: none;
+  }
+}
