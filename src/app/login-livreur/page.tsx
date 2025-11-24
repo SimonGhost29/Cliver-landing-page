@@ -3,6 +3,7 @@
 import React from "react";
 import { Mail, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 const colors = {
   primary: "#FF7F30",
@@ -15,6 +16,7 @@ const colors = {
 export default function LoginLivreurPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,6 +48,21 @@ export default function LoginLivreurPage() {
       if (signInError) {
         setError(signInError.message || "Identifiants incorrects.");
         return;
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (!userError && userData?.user) {
+        const role = (userData.user.user_metadata as any)?.role;
+
+        if (role === "client") {
+          router.push("/dashboard-client");
+        } else if (role === "livreur") {
+          router.push("/dashboard-livreur");
+        } else {
+          router.push("/");
+        }
+      } else {
+        router.push("/");
       }
 
       // TODO: rediriger vers le bon espace livreur (ex: /home-livreur) une fois prêt
