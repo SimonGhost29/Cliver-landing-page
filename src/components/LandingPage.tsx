@@ -147,7 +147,7 @@ const LandingPage: React.FC = () => {
     >
       {/* Header */}
       <header
-        className="lp-header"
+        className="lp-header anim-slide-down"
         style={{
           position: 'fixed',
           top: 0,
@@ -172,15 +172,15 @@ const LandingPage: React.FC = () => {
             height={40}
             style={{ objectFit: 'contain' }}
           />
-          <span style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
+          <span
+            style={{
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             Cliver
-            <Package size={24} color={colors.primary} />
           </span>
         </div>
 
@@ -209,60 +209,7 @@ const LandingPage: React.FC = () => {
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        <div className="lp-header-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: 'transparent',
-              color: 'white',
-              border: `1px solid ${colors.primary}`,
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 127, 48, 0.3)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <User size={20} />
-            Se connecter
-          </button>
-          <button
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: colors.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 127, 48, 0.3)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <ArrowRight size={20} />
-            Commencer
-          </button>
-        </div>
+        <div className="lp-header-actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'flex-end' }} />
 
         <div
           className={`lp-header-mobile-menu ${isMenuOpen ? 'open' : ''}`}
@@ -304,7 +251,7 @@ const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <section
-        className="lp-hero"
+        className="lp-hero anim-fade-in delay-100"
         style={{
           minHeight: '100vh',
           display: 'flex',
@@ -319,7 +266,7 @@ const LandingPage: React.FC = () => {
       >
         <div style={{ maxWidth: '800px' }}>
           <h1
-            className="lp-hero-title"
+            className="lp-hero-title anim-rise-up delay-200"
             style={{
               fontSize: 'clamp(2.2rem, 6vw, 3.5rem)',
               marginBottom: '1.5rem',
@@ -329,7 +276,7 @@ const LandingPage: React.FC = () => {
             Livraison rapide et fiable avec <span style={{ color: colors.primary }}>Cliver</span>
           </h1>
           <p
-            className="lp-hero-subtitle"
+            className="lp-hero-subtitle anim-rise-up delay-300"
             style={{
               fontSize: 'clamp(1rem, 4vw, 1.25rem)',
               marginBottom: '2rem',
@@ -339,7 +286,7 @@ const LandingPage: React.FC = () => {
             Commandez en quelques clics et recevez vos colis en un temps record. 
             Des livreurs professionnels à votre service 24/7.
           </p>
-          <div className="lp-hero-buttons" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="lp-hero-buttons anim-scale-in delay-400" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               style={{
                 backgroundColor: colors.primary,
@@ -413,6 +360,7 @@ const LandingPage: React.FC = () => {
       {/* Features Section */}
       <section
         id="features"
+        className="anim-fade-in delay-200"
         style={{
           padding: '4rem 1.5rem',
           backgroundColor: colors.gray,
@@ -451,9 +399,30 @@ const LandingPage: React.FC = () => {
                 description: 'Nous sommes disponibles jour et nuit, même les week-ends et jours fériés.',
                 icon: <Shield size={40} color={colors.primary} />,
               },
+              {
+                title: 'Paiement sécurisé',
+                description: 'Payez en toute confiance via carte, mobile money ou portefeuille Cliver.',
+                icon: <Shield size={40} color={colors.primary} />,
+              },
+              {
+                title: 'Notifications',
+                description: 'Alertes en temps réel à chaque étape de votre mission.',
+                icon: <MailOpen size={40} color={colors.primary} />,
+              },
+              {
+                title: 'Support dédié',
+                description: 'Assistance client réactive pour vous aider rapidement.',
+                icon: <Phone size={40} color={colors.primary} />,
+              },
+              {
+                title: 'API pour entreprises',
+                description: 'Intégrez Cliver à vos systèmes et automatisez vos envois.',
+                icon: <Info size={40} color={colors.primary} />,
+              },
             ].map((feature, index) => (
               <div
                 key={index}
+                className={`anim-rise-up ${index === 0 ? 'delay-200' : index === 1 ? 'delay-300' : 'delay-400'}`}
                 style={{
                   backgroundColor: colors.black,
                   padding: '2rem',
@@ -480,6 +449,7 @@ const LandingPage: React.FC = () => {
       {/* How It Works Section */}
       <section
         id="how-it-works"
+        className="anim-fade-in delay-200"
         style={{
           padding: '4rem 1.5rem',
           backgroundColor: colors.black,
@@ -504,6 +474,7 @@ const LandingPage: React.FC = () => {
           >
             {/* Parcours client */}
             <div
+              className="anim-rise-up delay-300"
               style={{
                 backgroundColor: colors.gray,
                 padding: '2rem',
@@ -696,6 +667,7 @@ const LandingPage: React.FC = () => {
       {/* Pricing Section */}
       <section
         id="pricing"
+        className="anim-fade-in delay-200"
         style={{
           padding: '4rem 1.5rem',
           backgroundColor: colors.gray,
